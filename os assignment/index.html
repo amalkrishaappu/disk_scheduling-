@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduling Algorithm Visualiser</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <div class="eyebrow">OPERATING SYSTEMS · CPU SCHEDULING</div>
+        <h1>CPU Scheduling Algorithm Visualiser</h1>
+        <p>Choose an algorithm, edit the process details, and view the Gantt chart and performance metrics.</p>
+
+
+        <section class="card disk-card">
+            <div class="eyebrow">OPERATING SYSTEMS · DISK SCHEDULING</div>
+            <h2>Disk Scheduling Simulator</h2>
+            <p>Compare FCFS and SSTF using a disk request queue and an initial head position.</p>
+
+            <div class="disk-controls">
+                <div class="field">
+                    <label for="diskAlgorithm">DISK SCHEDULING ALGORITHM</label>
+                    <select id="diskAlgorithm">
+                        <option value="fcfs">FCFS (First Come First Serve)</option>
+                        <option value="sstf">SSTF (Shortest Seek Time First)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="headPosition">INITIAL HEAD POSITION</label>
+                    <input id="headPosition" type="number" min="0" value="50">
+                </div>
+                <div class="field">
+                    <label for="diskRequests">DISK REQUEST QUEUE (comma-separated)</label>
+                    <input id="diskRequests" type="text" value="82, 170, 43, 140, 24, 16, 190"
+                           placeholder="Example: 82, 170, 43, 140">
+                </div>
+            </div>
+            <button class="btn primary" type="button" onclick="runDiskScheduling()">Run Disk Simulation</button>
+            <div id="diskError" class="disk-error" role="alert"></div>
+            <h3>Seek Sequence</h3>
+            <div id="diskSequence" class="disk-sequence">Run the simulation to see the seek sequence.</div>
+            <div class="disk-results">
+                <div class="stat"><span>Total Head Movement</span><b id="totalSeek">—</b></div>
+                <div class="stat"><span>Number of Requests</span><b id="requestCount">—</b></div>
+            </div>
+            <div class="scroll">
+                <table>
+                    <thead><tr><th>Step</th><th>From Track</th><th>To Track</th><th>Seek Distance</th></tr></thead>
+                    <tbody id="diskDetails"><tr><td colspan="4">Run a simulation to see details.</td></tr></tbody>
+                </table>
+            </div>
+            <p class="muted" id="diskExplanation">FCFS services requests in the given order. SSTF selects the pending request closest to the current head position.</p>
+        </section>
+
+        <div class="tabs" id="algoTabs"></div>
+
+        <div class="layout">
+            <aside class="card">
+                <h3>Algorithm Settings</h3>
+
+                <div class="field">
+                    <label for="algorithm">ALGORITHM</label>
+                    <select id="algorithm" onchange="changeAlgorithm(this.value)"></select>
+                </div>
+
+                <div id="settings"></div>
+
+                <h3>Process Data</h3>
+                    <button class="btn add-process-btn"
+                    type="button"
+                    onclick="addProcess()">
+                        + Add Process
+                    </button>
+                <p class="muted" id="processHelp">
+                    Edit arrival and burst times. A smaller priority number means higher priority.
+                </p>
+
+                <div class="scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Process</th>
+                                <th>Arrival</th>
+                                <th>Burst</th>
+                                <th id="priorityHead">Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inputs"></tbody>
+                    </table>
+                </div>
+
+                <div class="btnrow">
+                    <button class="btn primary" onclick="run()">▶ Run Simulation</button>
+                    <button class="btn" onclick="resetData()">↺ Reset Process Data</button>
+                </div>
+
+                <p class="foot">
+                    Context-switching overhead is not included.
+                    Priority is used only for Priority Scheduling.
+                </p>
+            </aside>
+
+            <div class="results-column">
+                <section class="card">
+                    <h3>Gantt Chart</h3>
+                    <p class="muted">Each block shows a process and its execution interval.</p>
+                    <div id="gantt" class="empty">
+                        Run a simulation to generate the Gantt chart.
+                    </div>
+                    <p id="elapsed" class="muted"></p>
+                </section>
+
+                <section class="card">
+                    <h3>Live Process Status</h3>
+                    <p class="muted">
+                        Watch the progress bars fill as processes receive CPU time.
+                    </p>
+
+                    <div class="process-board">
+                        <div class="scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>PID</th>
+                                        <th>AT</th>
+                                        <th>Status Bar</th>
+                                        <th>Remaining BT</th>
+                                        <th>WT</th>
+                                        <th>CT</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="liveStatus"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="btnrow three-buttons">
+                        <button class="btn primary" id="pauseBtn"
+                                onclick="togglePause()" disabled>
+                            ⏸ Pause
+                        </button>
+                        <button class="btn" onclick="run()">↻ Restart Animation</button>
+                        <button class="btn" onclick="skipAnimation()">⏭ Skip to Results</button>
+                    </div>
+
+                    <p id="liveClock" class="muted">Ready to simulate.</p>
+                </section>
+
+                <section class="card">
+                    <h3>Process Performance</h3>
+
+                    <div class="scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Process</th>
+                                    <th>Arrival</th>
+                                    <th>Burst</th>
+                                    <th id="priorityResultHead">Priority</th>
+                                    <th>Completion</th>
+                                    <th>Turnaround</th>
+                                    <th>Waiting</th>
+                                    <th>Response</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results">
+                                <tr>
+                                    <td colspan="8">Run a simulation to see results.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="stats" class="stats"></div>
+                </section>
+
+                <section class="card">
+                    <h3>How the Algorithm Works</h3>
+                    <p id="explain" class="muted"></p>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
